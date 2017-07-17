@@ -1,6 +1,6 @@
 const ecka = require('./ecka.json')
 const removeDiacritics = require('diacritics').remove
-const ECKO_REGEX = /\b(e[-\s]?\d{3,4}([a-g]|i{0,3}))/g
+const ECKO_REGEX = /\b(e[-\s]?\d{3,4}([a-g]|i{0,3}))/gi
 const eckaStriped = Object.keys(ecka).reduce((sum, k) => {
   let striped = ecka[k].names.map(s => removeDiacritics(s).toLowerCase())
   return Object.assign({}, sum, {[k]: striped})
@@ -66,7 +66,9 @@ const ingredientsTextToArr = (str) => str
   .filter(str => str.length)
 
 const getAdditives = (ingredients) => {
-  let ingredientsArr = Array.isArray(ingredients) ? ingredients : ingredientsTextToArr(ingredients)
+  let ingredientsArrUnflatten = Array.isArray(ingredients) ? ingredients : ingredientsTextToArr(ingredients)
+
+  let ingredientsArr = ingredientsArrUnflatten.reduce((sum, act) => sum.concat(ingredientsTextToArr(act)), [])
 
   let ecka = ingredientsArr.reduce((sum, ing) => {
     let normIng = removeDiacritics(ing)
