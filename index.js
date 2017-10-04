@@ -1,9 +1,14 @@
 const ecka = require('./ecka.json')
 const removeDiacritics = require('diacritics').remove
 const ECKO_REGEX = /\b(e[-\s]?\d{3,4}([a-g]|i{0,3}))/gi
+
 const eckaStriped = Object.keys(ecka).reduce((sum, k) => {
-  let striped = ecka[k].names.map(s => removeDiacritics(s).toLowerCase())
-  return Object.assign({}, sum, {[k]: striped})
+  let rxStr = ecka[k].names
+    .map(s => removeDiacritics(s))
+    .join('|')
+
+  let rx = new RegExp(`\\b(${rxStr})\\b`, "gi")
+  return Object.assign({}, sum, {[k]: rx})
 }, {})
 
 const __getListedE = (str) => {
@@ -25,19 +30,16 @@ const __isOverlaping = (hitX, hitY) => {
 }
 
 const __getLongestHitForE = (str, eNum) => {
-  let eAlias = eckaStriped[eNum]
-  let hits = eAlias.reduce((longest, alias) => {
-    let regexp = new RegExp(`\\b${alias}\\b`)
-    let match = str.match(regexp)
-    if (match !== null) {
-      if (!longest || longest.length < alias.length) {
-        return { index: match.index, length: alias.length, eNum }
-      }
+  let rx = eckaStriped[eNum]
+  let m
+  let retVal = null
+  while ((m = rx.exec(str)) !== null) {
+    if (!retVal || retVal.length < m[0].length) {
+      retVal = { index: m.index, length: m[0].length, eNum }
     }
-    return longest
-  }, null)
+  }
 
-  return hits
+  return retVal
 }
 
 // filter hits that are overlaping and shorther
@@ -94,5 +96,5 @@ const getAdditives = (ingredients) => {
 }
 
 module.exports = {
-  ecka, eckaStriped, getAdditives
+  ecka, getAdditives
 }
