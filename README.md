@@ -1,6 +1,8 @@
 # ecka
 Tool for finding additives in food ingredients. Using czech dictionary.
 ## changelog
+### 0.0.4
++ dictionary update from 2017/11/10
 ### 0.0.3
 + performance optimization
 + dictionary update from 2017/10/03
