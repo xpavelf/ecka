@@ -1,6 +1,6 @@
 {
   "name": "ecka",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Tool for finding additives in food ingredients. Using czech dictionary.",
   "main": "index.js",
   "scripts": {
