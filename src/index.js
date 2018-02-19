@@ -1,6 +1,13 @@
 const ecka = require('./ecka.json')
 const removeDiacritics = require('diacritics').remove
-const ECKO_REGEX = /\b(e[-\s]?\d{3,4}([a-g]|i{0,3}))/gi
+
+const E_SUF_RX = '\\d{3,4}([a-g]|i{0,3})'
+const E_RX = `e[-\\s]?${E_SUF_RX}`
+const ECKO_REGEX = new RegExp(`\\b(${E_RX})`, 'gi')
+const MULTIPLE_ECKO_RX = new RegExp(`\\b${E_RX}\\b(,\\s?${E_SUF_RX}\\b(?!g))+`, 'gi')
+
+const ECKO_REGEX_OLD = /\b(e[-\s]?\d{3,4}([a-g]|i{0,3}))/gi
+
 
 const eckaStriped = Object.keys(ecka).reduce((sum, k) => {
   let rxStr = ecka[k].names
@@ -13,10 +20,19 @@ const eckaStriped = Object.keys(ecka).reduce((sum, k) => {
 
 const __getListedE = (str) => {
   let listed = []
-  let m
+  let m, m1
   while (m = ECKO_REGEX.exec(str)) {
-    listed.push(m[1].replace(/-|\s/g, ''))
+    listed.push(m[0].replace(/-|\s/g, ''))
   }
+
+  while (m1 = MULTIPLE_ECKO_RX.exec(str)) {
+    m1[0]
+      .split(/,\s?/)
+      .slice(1)
+      .filter(e => !e.match(/\d\s?g/)) // napr. E150, 200g
+      .forEach(e => listed.push('e'+e))
+  }
+
   return listed
 }
 
@@ -75,8 +91,6 @@ const getAdditives = (ingredients) => {
   let ecka = ingredientsArr.reduce((sum, ing) => {
     let normIng = removeDiacritics(ing)
 
-    let listed = __getListedE(ingredientsArr)
-
     let hits = Object.keys(eckaStriped).reduce((sum, eNum) => {
       let hit = __getLongestHitForE(normIng, eNum)
       return hit ? sum.concat(hit) : sum
@@ -87,10 +101,11 @@ const getAdditives = (ingredients) => {
       filteredHits = __filterInvalidHits(hits)
     }
 
-    return sum.concat(filteredHits).concat(listed)
+    return sum.concat(filteredHits)
   }, [])
 
-  let eckaUniq = new Set(ecka)
+  let listed = __getListedE(ingredientsArr)
+  let eckaUniq = new Set(ecka.concat(listed))
 
   return [...eckaUniq].sort()
 }
